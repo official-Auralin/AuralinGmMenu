@@ -1,0 +1,24 @@
+## Interface: 120001
+#@debug@
+## Version: 0.0.0-dev
+#@end-debug@
+#@non-debug@
+# ## Version: @project-version@
+#@end-non-debug@
+## Title: AuralinGmMenu
+## Notes: LDB Micro Menu for modern WoW (Retail-first, Classic-ready)
+## Author: Auralin Revival Team
+## X-Credits: Original gmMenu by gmarco and contributors; WoWInterface maintenance credit: Wexen
+## SavedVariables: AuralinGmMenuDB, GMMENU_CFG
+## X-WoWI-ID: 24901
+## X-Curse-Project-ID: 000000
+## IconTexture: Interface\AddOns\AuralinGmMenu\icon.tga
+
+libs\LibStub.lua
+libs\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1.lua
+libs\LibQTip-1.0.lua
+libs\LibDBIcon-1.0.lua
+
+localization.lua
+core.lua

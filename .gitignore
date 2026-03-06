@@ -1,0 +1,15 @@
+# OS files
+Thumbs.db
+.DS_Store
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+
+# Build and package artifacts
+release/
+*.zip
+*.luac
+media/AGMM_Logo.png
+

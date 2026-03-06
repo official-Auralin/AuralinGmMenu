@@ -1,0 +1,17 @@
+package-as: AuralinGmMenu
+license-output: LICENSE
+
+ignore:
+  - .github
+  - .gitignore
+  - CONTRIBUTING.md
+  - README.md
+  - RELEASING.md
+
+manual-changelog:
+  markup-type: markdown
+  filename: readme.txt
+
+curseforge:
+  project-id: 000000
+  release-type: release
