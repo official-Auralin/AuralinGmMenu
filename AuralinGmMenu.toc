@@ -11,7 +11,7 @@
 ## X-Credits: Original gmMenu by gmarco and contributors; WoWInterface maintenance credit: Wexen
 ## SavedVariables: AuralinGmMenuDB, GMMENU_CFG
 ## X-WoWI-ID: 24901
-## X-Curse-Project-ID: 000000
+## X-Curse-Project-ID: 1479293
 ## IconTexture: Interface\AddOns\AuralinGmMenu\icon.tga
 
 libs\LibStub.lua
@@ -22,3 +22,4 @@ libs\LibDBIcon-1.0.lua
 
 localization.lua
 core.lua
+

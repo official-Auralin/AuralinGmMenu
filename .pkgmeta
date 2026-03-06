@@ -13,5 +13,6 @@ manual-changelog:
   filename: readme.txt
 
 curseforge:
-  project-id: 000000
+  project-id: 1479293
   release-type: release
+
