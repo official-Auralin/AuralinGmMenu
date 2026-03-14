@@ -44,8 +44,6 @@ local tooltipRows = {}
 local brokerElapsed = 0
 local activeTooltip
 local activeTooltipOwner
-local popupMenuFrame
-local popupButtons = {}
 local lastBrokerClickAt = 0
 
 local LeftButtonIcon = " |TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME:13:11:0:-1:512:512:12:66:230:307|t "
@@ -720,15 +718,8 @@ local function hideDefaultTooltipFrames()
     end
 end
 
-local function hidePopupMenu()
-    if popupMenuFrame and popupMenuFrame:IsShown() then
-        popupMenuFrame:Hide()
-    end
-end
-
 local function hideAllOverlays()
     releaseTooltip()
-    hidePopupMenu()
     hideDefaultTooltipFrames()
 end
 
@@ -1089,164 +1080,6 @@ local function runEntryAction(entry)
     return true
 end
 
-local function createPopupButton(parent)
-    local button = CreateFrame("Button", nil, parent)
-    button:SetHeight(24)
-    button:RegisterForClicks("AnyUp")
-
-    local highlight = button:CreateTexture(nil, "HIGHLIGHT")
-    highlight:SetAllPoints()
-    highlight:SetColorTexture(1, 1, 1, 0.08)
-
-    local icon = button:CreateTexture(nil, "ARTWORK")
-    icon:SetPoint("LEFT", 8, 0)
-    icon:SetSize(16, 16)
-    button.icon = icon
-
-    local text = button:CreateFontString(nil, "ARTWORK", "GameTooltipText")
-    text:SetPoint("LEFT", icon, "RIGHT", 8, 0)
-    text:SetJustifyH("LEFT")
-    button.text = text
-
-    local keybind = button:CreateFontString(nil, "ARTWORK", "GameTooltipTextSmall")
-    keybind:SetPoint("RIGHT", -8, 0)
-    keybind:SetJustifyH("RIGHT")
-    button.keybind = keybind
-
-    button:SetScript("OnClick", function(self, buttonName)
-        if buttonName == "MiddleButton" then
-            hideAllOverlays()
-            return
-        end
-
-        if runEntryAction(self.entry) then
-            hidePopupMenu()
-        end
-    end)
-
-    return button
-end
-
-local function ensurePopupMenuFrame()
-    if popupMenuFrame then
-        return popupMenuFrame
-    end
-
-    local template = BackdropTemplateMixin and "BackdropTemplate" or nil
-    popupMenuFrame = CreateFrame("Frame", ADDON .. "PopupMenu", UIParent, template)
-    popupMenuFrame:SetFrameStrata("TOOLTIP")
-    popupMenuFrame:SetClampedToScreen(true)
-    popupMenuFrame:EnableMouse(true)
-
-    if popupMenuFrame.SetBackdrop then
-        popupMenuFrame:SetBackdrop({
-            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 4, right = 4, top = 4, bottom = 4 },
-        })
-        popupMenuFrame:SetBackdropColor(0.05, 0.05, 0.08, 0.96)
-        popupMenuFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-    end
-
-    local title = popupMenuFrame:CreateFontString(nil, "ARTWORK", "GameTooltipHeaderText")
-    title:SetPoint("TOPLEFT", 12, -10)
-    title:SetText(ADDON)
-    popupMenuFrame.title = title
-
-    return popupMenuFrame
-end
-
-local function showPopupMenu(anchor)
-    local frame = ensurePopupMenuFrame()
-    local entries = collectVisibleMenuEntries()
-    local owner = normalizeAnchor(anchor)
-
-    hideDefaultTooltipFrames()
-    releaseTooltip()
-
-    local width = 300
-    local topOffset = -30
-    local rowSpacing = 2
-
-    for index, entry in ipairs(entries) do
-        local button = popupButtons[index]
-        if not button then
-            button = createPopupButton(frame)
-            popupButtons[index] = button
-        end
-
-        button.entry = entry
-        button:ClearAllPoints()
-        if index == 1 then
-            button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6, topOffset)
-        else
-            button:SetPoint("TOPLEFT", popupButtons[index - 1], "BOTTOMLEFT", 0, -rowSpacing)
-        end
-        button:SetPoint("RIGHT", frame, "RIGHT", -6, 0)
-
-        local enabled, reason = canExecuteEntry(entry)
-        local iconDescriptor = resolveEntryDisplayIcon(entry)
-        if applyIconDescriptorToTexture(button.icon, iconDescriptor) then
-            button.icon:Show()
-            button.text:ClearAllPoints()
-            button.text:SetPoint("LEFT", button.icon, "RIGHT", 8, 0)
-        else
-            button.icon:SetTexture(nil)
-            button.icon:Hide()
-            button.text:ClearAllPoints()
-            button.text:SetPoint("LEFT", button, "LEFT", 8, 0)
-        end
-
-        local label = entry.label()
-        if not enabled and reason then
-            label = string.format("%s [%s]", label, reason)
-        end
-        button.text:SetText(label)
-
-        if enabled then
-            button.text:SetTextColor(1, 1, 1)
-            button.keybind:SetTextColor(0.95, 0.85, 0.3)
-        else
-            button.text:SetTextColor(0.6, 0.6, 0.6)
-            button.keybind:SetTextColor(0.5, 0.5, 0.5)
-        end
-
-        if db.showKeys and entry.binding then
-            button.keybind:SetText(getBindingLabel(entry.binding) or "-")
-        else
-            button.keybind:SetText("")
-        end
-
-        button:Show()
-    end
-
-    for index = #entries + 1, #popupButtons do
-        popupButtons[index]:Hide()
-    end
-
-    frame:SetWidth(width)
-    frame:SetHeight(40 + (#entries * 26))
-    frame:ClearAllPoints()
-
-    frame:SetPoint("TOPLEFT", owner, "BOTTOMLEFT", 0, -4)
-    frame:Show()
-
-    if frame:GetBottom() and frame:GetBottom() < 4 then
-        frame:ClearAllPoints()
-        frame:SetPoint("BOTTOMLEFT", owner, "TOPLEFT", 0, 4)
-    end
-end
-
-local function togglePopupMenu(anchor)
-    if popupMenuFrame and popupMenuFrame:IsShown() then
-        hidePopupMenu()
-        return
-    end
-
-    showPopupMenu(anchor)
-end
-
 local function onTooltipLineClick(_, lineArgs, buttonName)
     if buttonName == "MiddleButton" then
         hideAllOverlays()
@@ -1284,10 +1117,10 @@ local function addMemoryDiagnosticsRows(tooltip)
     end
 end
 
-local function buildTooltip(anchor)
+local function showTooltip(anchor)
     local owner = normalizeAnchor(anchor)
 
-    hidePopupMenu()
+    hideDefaultTooltipFrames()
     releaseTooltip()
     wipe(tooltipRows)
 
@@ -1358,9 +1191,9 @@ local function buildTooltip(anchor)
 
     tooltip:AddSeparator()
     tooltip:AddLine(
-        LeftButtonIcon .. L["Toggle popup menu"],
+        LeftButtonIcon .. L["Toggle tooltip"],
         RightButtonIcon .. L["Open settings"],
-        MiddleButtonIcon .. L["Hide tooltip/menu"]
+        MiddleButtonIcon .. L["Hide tooltip"]
     )
     tooltip:AddLine(
         colorize("8fb3ff", "H") .. " = Home latency",
@@ -1369,6 +1202,17 @@ local function buildTooltip(anchor)
     )
 
     tooltip:Show()
+end
+
+local function toggleTooltip(anchor)
+    local owner = normalizeAnchor(anchor)
+
+    if activeTooltip and activeTooltipOwner == owner then
+        releaseTooltip()
+        return
+    end
+
+    showTooltip(owner)
 end
 
 local function tryOpenSettings(method, ...)
@@ -1539,7 +1383,7 @@ local dataobj = ldb:NewDataObject(ADDON, {
 })
 
 dataobj.OnEnter = function(self)
-    local ok, err = pcall(buildTooltip, normalizeAnchor(self))
+    local ok, err = pcall(showTooltip, normalizeAnchor(self))
 
     if not ok then
         showError("Tooltip error: " .. tostring(err))
@@ -1547,11 +1391,7 @@ dataobj.OnEnter = function(self)
 end
 
 dataobj.OnLeave = function(self)
-    if popupMenuFrame and popupMenuFrame:IsShown() then
-        return
-    end
-
-    releaseTooltip()
+    -- LibQTip auto-hide keeps the tooltip interactive while moving off the broker.
 end
 
 dataobj.OnClick = function(...)
@@ -1576,7 +1416,10 @@ dataobj.OnClick = function(...)
         return
     end
 
-    togglePopupMenu(anchor)
+    local ok, err = pcall(toggleTooltip, anchor)
+    if not ok then
+        showError("Tooltip error: " .. tostring(err))
+    end
 end
 
 dataobj.OnMouseUp = dataobj.OnClick
